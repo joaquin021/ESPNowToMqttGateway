@@ -53,7 +53,6 @@ int serializeResponse(uint8_t *buffer, response *response) {
 uint8_t sendResponseViaUart(response *response) {
     uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
     int messageLength = serializeResponse(serializedBuffer, response);
-    Serial2.write(serializedBuffer, messageLength);
-    Serial2.write(END_TX_CHAR);
+    writeToUart(serializedBuffer, messageLength);
     return messageLength;
 }

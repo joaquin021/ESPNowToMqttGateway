@@ -6,7 +6,11 @@
 #include "RequestUtils.hpp"
 #include "ResponseUtils.hpp"
 #include "Secrets.h"
+#include "UartHandler.hpp"
 #include "messages.pb.h"
+
+#define RX_PIN 16
+#define TX_PIN 17
 
 MqttService mqttService(MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD);
 
@@ -36,20 +40,12 @@ void pingOpHandler(request_Ping *pingOp, response_OpResponse *opResponse) {
 void serialDataHandler(const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     response response = manageMessageRequest(incomingData, len, printRequestData, sendOpHandler, subscribeOpHandler, pingOpHandler);
-    sendResponseViaUart(&response);
-    debugln("--------------------------------------------------");
-}
-
-void readFromSerial() {
-    if (Serial2.available()) {
-        uint8_t buffer[ESPNOW_BUFFERSIZE];
-        int bytesRead = Serial2.readBytesUntil(END_TX_CHAR, buffer, ESPNOW_BUFFERSIZE);
-        if (bytesRead > 0) {
-            debug("Bytes read from Serial2: ");
-            debugln(bytesRead);
-            serialDataHandler(buffer, bytesRead);
-        }
+    if (response.opResponses_count > 0) {
+        sendResponseViaUart(&response);
+    } else {
+        debugln("Response is empty.");
     }
+    debugln("--------------------------------------------------");
 }
 
 void setupWiFi() {
@@ -67,15 +63,15 @@ void setupWiFi() {
 }
 
 void setup() {
-    Serial.begin(115200);
-    Serial2.begin(115200, SERIAL_8N1, 16, 17);
+    Serial.begin(BAUD_RATE);
+    Serial2.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
 
     setupWiFi();
     mqttService.setupMqtt();
 }
 
 void loop() {
-    readFromSerial();
+    readFromUart(serialDataHandler);
     mqttService.mqttLoop();
     delay(500);
 }

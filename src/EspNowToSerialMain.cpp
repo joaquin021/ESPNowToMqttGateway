@@ -4,6 +4,7 @@
 
 #include "Commons.h"
 #include "RequestUtils.hpp"
+#include "UartHandler.hpp"
 #include "messages.pb.h"
 
 #define RX_PIN 2
@@ -12,8 +13,7 @@
 void OnRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     printMacAndLenPacketReceived(mac, len);
-    Serial2.write(incomingData, len);
-    Serial2.write(END_TX_CHAR);
+    writeToUart(incomingData, len);
     debugln("--------------------------------------------------");
 }
 
@@ -23,18 +23,6 @@ void serialDataHandler(const uint8_t *incomingData, int len) {
     deserializeResponse(&deserializedResponse, incomingData, len);
     printResponse(&deserializedResponse, len);
     debugln("--------------------------------------------------");
-}
-
-void readFromSerial() {
-    if (Serial2.available()) {
-        uint8_t buffer[ESPNOW_BUFFERSIZE];
-        int bytesRead = Serial2.readBytesUntil(END_TX_CHAR, buffer, ESPNOW_BUFFERSIZE);
-        if (bytesRead > 0) {
-            debug("Bytes read from Serial2: ");
-            debugln(bytesRead);
-            serialDataHandler(buffer, bytesRead);
-        }
-    }
 }
 
 void setupWiFi() {
@@ -51,14 +39,14 @@ void setupEspNow() {
 }
 
 void setup() {
-    Serial.begin(115200);
-    Serial2.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
+    Serial.begin(BAUD_RATE);
+    Serial2.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
 
     setupWiFi();
     setupEspNow();
 }
 
 void loop() {
-    readFromSerial();
+    readFromUart(serialDataHandler);
     delay(500);
 }

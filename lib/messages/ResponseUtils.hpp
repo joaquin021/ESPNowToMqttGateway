@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "Commons.h"
+#include "UartHandler.hpp"
 #include "messages.pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
