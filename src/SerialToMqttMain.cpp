@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
-#include "Commons.h"
+#include "Commons.hpp"
 #include "MqttService.hpp"
 #include "RequestUtils.hpp"
 #include "ResponseUtils.hpp"
@@ -29,20 +29,19 @@ void sendOpHandler(request_Send *send, char *clientId, response_OpResponse *opRe
 
 void subscribeOpHandler(request_Subscribe *subscribeOp, char *clientId, response_OpResponse *opResponse) {
     printSubscribeOperation(subscribeOp);
-    if(mqttService.existsSubscription(clientId, subscribeOp)) {
-        if(mqttService.existsDataInTopic(clientId, subscribeOp)) {
+    if (mqttService.existsSubscription(clientId, subscribeOp)) {
+        if (mqttService.existsDataInTopic(clientId, subscribeOp)) {
             String data = mqttService.getData(clientId, subscribeOp);
             buildResponse(opResponse, response_Result_OK, data.c_str());
         } else {
             buildResponse(opResponse, response_Result_NO_MSG, NULL);
         }
     } else {
-        if(mqttService.subscribe(clientId, subscribeOp)) {
+        if (mqttService.subscribe(clientId, subscribeOp)) {
             buildResponse(opResponse, response_Result_NO_MSG, "Subscribe to topic");
         } else {
             buildResponse(opResponse, response_Result_NOK, "Can not subscribe");
         }
-
     }
 }
 

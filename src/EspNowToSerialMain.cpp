@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <esp_now.h>
 
-#include "Commons.h"
+#include "Commons.hpp"
 #include "RequestUtils.hpp"
 #include "UartHandler.hpp"
 #include "messages.pb.h"
@@ -35,7 +35,7 @@ void sendResponseViaEspNow(const uint8_t *mac, const uint8_t *outputData, int le
 
 void OnRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    printMacAndLenPacketReceived(mac, len);
+    printMacAndLenPacket(mac, len, "Packet received from: ");
     writeToUart(incomingData, len);
     debugln("--------------------------------------------------");
 }

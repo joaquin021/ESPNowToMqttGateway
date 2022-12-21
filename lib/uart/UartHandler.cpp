@@ -16,3 +16,10 @@ void writeToUart(const uint8_t *buffer, size_t size) {
     Serial2.write(buffer, size);
     Serial2.write(END_TX_CHAR);
 }
+
+uint8_t sendResponseViaUart(response *response) {
+    uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
+    int messageLength = serializeResponse(serializedBuffer, response);
+    writeToUart(serializedBuffer, messageLength);
+    return messageLength;
+}

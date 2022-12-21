@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "Commons.h"
+#include "Commons.hpp"
 #include "ResponseUtils.hpp"
 #include "messages.pb.h"
 #include "pb_decode.h"
@@ -26,8 +26,6 @@ response manageMessageRequest(const uint8_t *incomingData, int len,
                               ping_op_handler_t ping_op_handler = pingOpHandlerDummy);
 
 bool deserializeRequest(request *deserializedRequest, const uint8_t *incomingData, int len);
-
-void printMacAndLenPacketReceived(const uint8_t *mac, int len);
 
 void printRequestData(request *request);
 

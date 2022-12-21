@@ -1,5 +1,7 @@
-#ifndef __COMMONS_H
-#define __COMMONS_H
+#ifndef __COMMONS_HPP
+#define __COMMONS_HPP
+
+#include "Arduino.h"
 
 #define DEBUG_FLAG
 
@@ -16,5 +18,7 @@
 #define ESPNOW_BUFFERSIZE 200
 #define END_TX_CHAR '|'
 #define GATEWAY_ID "ESPNowToMqttGateway"
+
+void printMacAndLenPacket(const uint8_t *mac, int len, const char *debugMessage);
 
 #endif

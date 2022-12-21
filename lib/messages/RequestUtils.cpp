@@ -1,13 +1,5 @@
 #include "RequestUtils.hpp"
 
-void printMacAndLenPacketReceived(const uint8_t *mac, int len) {
-    char macStr[18 + 1 + 4];  // 18 mac + 1 space + 3 len
-    debug("Packet received from: ");
-    snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x %db",
-             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], len);
-    debugln(macStr);
-}
-
 response manageMessageRequest(const uint8_t *incomingData, int len,
                               request_handler_t request_handler,
                               send_op_handler_t send_op_handler,
@@ -18,7 +10,7 @@ response manageMessageRequest(const uint8_t *incomingData, int len,
     response response = createResponse(&deserializedRequest);
 
     if (deserialized) {
-        printMacAndLenPacketReceived(deserializedRequest.client_mac, len);
+        printMacAndLenPacket(deserializedRequest.client_mac, len, "Packet received from: ");
         request_handler(&deserializedRequest);
 
         for (int count = 0; count < deserializedRequest.operations_count; count++) {

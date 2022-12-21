@@ -1,15 +1,7 @@
 #include "ResponseUtils.hpp"
 
-void printMacAndLenPacketResponse(const uint8_t *mac, int len) {
-    char macStr[18 + 1 + 4];  // 18 mac + 1 space + 3 len
-    debug("Packet to: ");
-    snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x %db",
-             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], len);
-    debugln(macStr);
-}
-
 void printResponse(response *deserializedResponse, int len) {
-    printMacAndLenPacketResponse(deserializedResponse->client_mac, len);
+    printMacAndLenPacket(deserializedResponse->client_mac, len, "Packet to: ");
     debug("Operations: ");
     debugln(deserializedResponse->opResponses_count);
     debug("MessageType: ");
@@ -48,11 +40,4 @@ int serializeResponse(uint8_t *buffer, response *response) {
     pb_ostream_t myStream = pb_ostream_from_buffer(buffer, ESPNOW_BUFFERSIZE);
     pb_encode(&myStream, response_fields, response);
     return myStream.bytes_written;
-}
-
-uint8_t sendResponseViaUart(response *response) {
-    uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
-    int messageLength = serializeResponse(serializedBuffer, response);
-    writeToUart(serializedBuffer, messageLength);
-    return messageLength;
 }
