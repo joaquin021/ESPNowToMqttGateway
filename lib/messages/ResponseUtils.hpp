@@ -2,6 +2,7 @@
 #define __RESPONSE_UTILS_HPP
 
 #include <Arduino.h>
+#include <string.h>
 
 #include "Commons.h"
 #include "UartHandler.hpp"
