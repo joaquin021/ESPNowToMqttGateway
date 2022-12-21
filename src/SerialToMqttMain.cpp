@@ -17,7 +17,7 @@ MqttService mqttService(MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD);
 void sendOpHandler(request_Send *send, char *clientId, response_OpResponse *opResponse) {
     printSendOperation(send);
     if (mqttService.isMqttConnected()) {
-        if (mqttService.publishMqtt(send, clientId)) {
+        if (mqttService.publishMqtt(clientId, send)) {
             buildResponse(opResponse, response_Result_OK, NULL);
         } else {
             buildResponse(opResponse, response_Result_NOK, "Error publishing the mqtt message");
@@ -27,9 +27,23 @@ void sendOpHandler(request_Send *send, char *clientId, response_OpResponse *opRe
     }
 }
 
-void subscribeOpHandler(request_Subscribe *subscribeOp, response_OpResponse *opResponse) {
+void subscribeOpHandler(request_Subscribe *subscribeOp, char *clientId, response_OpResponse *opResponse) {
     printSubscribeOperation(subscribeOp);
-    buildResponse(opResponse, response_Result_NOK, "Can not subscribe");
+    if(mqttService.existsSubscription(clientId, subscribeOp)) {
+        if(mqttService.existsDataInTopic(clientId, subscribeOp)) {
+            String data = mqttService.getData(clientId, subscribeOp);
+            buildResponse(opResponse, response_Result_OK, data.c_str());
+        } else {
+            buildResponse(opResponse, response_Result_NO_MSG, NULL);
+        }
+    } else {
+        if(mqttService.subscribe(clientId, subscribeOp)) {
+            buildResponse(opResponse, response_Result_NO_MSG, "Subscribe to topic");
+        } else {
+            buildResponse(opResponse, response_Result_NOK, "Can not subscribe");
+        }
+
+    }
 }
 
 void pingOpHandler(request_Ping *pingOp, response_OpResponse *opResponse) {

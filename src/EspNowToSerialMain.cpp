@@ -27,9 +27,9 @@ void sendResponseViaEspNow(const uint8_t *mac, const uint8_t *outputData, int le
     EspNowPair(mac);
     esp_err_t result = esp_now_send(mac, outputData, len);
     if (result == ESP_OK) {
-        debugln("The message was sent sucessfully.");
+        debugln("The response was sent sucessfully via ESP-NOW.");
     } else {
-        debugln("There was an error sending the message.");
+        debugln("There was an error sending via ESP-NOW the response.");
     }
 }
 
@@ -39,11 +39,11 @@ void OnRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     writeToUart(incomingData, len);
     debugln("--------------------------------------------------");
 }
-
+/*
 void onSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     debugln("Send success via esp-now.");
 }
-
+*/
 void serialDataHandler(const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     response deserializedResponse = response_init_zero;
@@ -64,7 +64,7 @@ void setupEspNow() {
         return;
     }
     esp_now_register_recv_cb(OnRecv);
-    esp_now_register_send_cb(onSent);
+    // esp_now_register_send_cb(onSent);
 }
 
 void setup() {

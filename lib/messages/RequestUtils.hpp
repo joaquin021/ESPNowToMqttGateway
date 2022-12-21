@@ -11,13 +11,12 @@
 
 typedef void (*request_handler_t)(request *request);
 typedef void (*send_op_handler_t)(request_Send *sendOp, char *clientId, response_OpResponse *opResponse);
-typedef void (*subscribe_op_handler_t)(request_Subscribe *subscribeOp, response_OpResponse *opResponse);
+typedef void (*subscribe_op_handler_t)(request_Subscribe *subscribeOp, char *clientId, response_OpResponse *opResponse);
 typedef void (*ping_op_handler_t)(request_Ping *pingOp, response_OpResponse *opResponse);
-
 
 void requestHandlerDummy(request *request);
 void sendOpHandlerDummy(request_Send *sendOp, char *clientId, response_OpResponse *opResponse);
-void subscribeOpHandlerDummy(request_Subscribe *subscribeOp, response_OpResponse *opResponse);
+void subscribeOpHandlerDummy(request_Subscribe *subscribeOp, char *clientId, response_OpResponse *opResponse);
 void pingOpHandlerDummy(request_Ping *pingOp, response_OpResponse *opResponse);
 
 response manageMessageRequest(const uint8_t *incomingData, int len,

@@ -30,7 +30,7 @@ response manageMessageRequest(const uint8_t *incomingData, int len,
                     send_op_handler(&deserializedRequest.operations[count].op.send, deserializedRequest.client_id, opResponse);
                     break;
                 case request_Operation_qRequest_tag:
-                    subscribe_op_handler(&deserializedRequest.operations[count].op.qRequest, opResponse);
+                    subscribe_op_handler(&deserializedRequest.operations[count].op.qRequest, deserializedRequest.client_id, opResponse);
                     break;
                 case request_Operation_ping_tag:
                     ping_op_handler(&deserializedRequest.operations[count].op.ping, opResponse);
