@@ -13,6 +13,4 @@ void readFromUart(uart_read_cb_t uart_read_cb);
 
 void writeToUart(const uint8_t *buffer, size_t size);
 
-uint8_t sendResponseViaUart(response *response);
-
 #endif

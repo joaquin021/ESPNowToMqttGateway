@@ -49,6 +49,13 @@ void pingOpHandler(request *request, request_Ping *pingOp, response_OpResponse *
     responseUtils.buildOpResponse(opResponse, response_Result_OK, String(pingOp->num).c_str());
 }
 
+uint8_t sendResponseViaUart(response *response) {
+    uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
+    int messageLength = ResponseUtils::getInstance().serializeResponse(serializedBuffer, response);
+    writeToUart(serializedBuffer, messageLength);
+    return messageLength;
+}
+
 void requestHandler(request *deserializedRequest, const uint8_t *serializedRequest, int len, response *response) {
     if (response->opResponses_count > 0) {
         sendResponseViaUart(response);
