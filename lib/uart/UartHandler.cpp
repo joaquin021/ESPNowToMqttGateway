@@ -19,7 +19,7 @@ void writeToUart(const uint8_t *buffer, size_t size) {
 
 uint8_t sendResponseViaUart(response *response) {
     uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
-    int messageLength = serializeResponse(serializedBuffer, response);
+    int messageLength = ResponseUtils::getInstance().serializeResponse(serializedBuffer, response);
     writeToUart(serializedBuffer, messageLength);
     return messageLength;
 }

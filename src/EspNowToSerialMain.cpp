@@ -10,6 +10,8 @@
 #define RX_PIN 2
 #define TX_PIN 15
 
+ResponseUtils responseUtils = ResponseUtils::getInstance();
+
 void EspNowPair(const uint8_t *mac) {
     bool existPeer = esp_now_is_peer_exist(mac);
     if (!existPeer) {
@@ -33,6 +35,10 @@ void sendResponseViaEspNow(const uint8_t *mac, const uint8_t *outputData, int le
     }
 }
 
+void responseHandler(response *deserializedResponse, const uint8_t *serializedResponse, int len) {
+    sendResponseViaEspNow(deserializedResponse->client_mac, serializedResponse, len);
+}
+
 void OnRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     printMacAndLenPacket(mac, len, "Packet received from: ");
@@ -46,10 +52,7 @@ void onSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 */
 void serialDataHandler(const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    response deserializedResponse = response_init_zero;
-    deserializeResponse(&deserializedResponse, incomingData, len);
-    printResponse(&deserializedResponse, len);
-    sendResponseViaEspNow(deserializedResponse.client_mac, incomingData, len);
+    responseUtils.manage(incomingData, len, responseHandler, opResponseHandlerDummy);
     debugln("--------------------------------------------------");
 }
 

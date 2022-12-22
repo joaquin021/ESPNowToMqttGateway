@@ -12,52 +12,54 @@
 #define RX_PIN 16
 #define TX_PIN 17
 
+RequestUtils requestUtils = RequestUtils::getInstance();
+ResponseUtils responseUtils = ResponseUtils::getInstance();
 MqttService mqttService(MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD);
 
-void sendOpHandler(request_Send *send, char *clientId, response_OpResponse *opResponse) {
-    printSendOperation(send);
+void sendOpHandler(request *request, request_Send *send, response_OpResponse *opResponse) {
     if (mqttService.isMqttConnected()) {
-        if (mqttService.publishMqtt(clientId, send)) {
-            buildResponse(opResponse, response_Result_OK, NULL);
+        if (mqttService.publishMqtt(request->client_id, send)) {
+            responseUtils.buildOpResponse(opResponse, response_Result_OK, NULL);
         } else {
-            buildResponse(opResponse, response_Result_NOK, "Error publishing the mqtt message");
+            responseUtils.buildOpResponse(opResponse, response_Result_NOK, "Error publishing the mqtt message");
         }
     } else {
-        buildResponse(opResponse, response_Result_NOMQTT, mqttService.getMqttStatus().c_str());
+        responseUtils.buildOpResponse(opResponse, response_Result_NOMQTT, mqttService.getMqttStatus().c_str());
     }
 }
 
-void subscribeOpHandler(request_Subscribe *subscribeOp, char *clientId, response_OpResponse *opResponse) {
-    printSubscribeOperation(subscribeOp);
-    if (mqttService.existsSubscription(clientId, subscribeOp)) {
-        if (mqttService.existsDataInTopic(clientId, subscribeOp)) {
-            String data = mqttService.getData(clientId, subscribeOp);
-            buildResponse(opResponse, response_Result_OK, data.c_str());
+void subscribeOpHandler(request *request, request_Subscribe *subscribeOp, response_OpResponse *opResponse) {
+    if (mqttService.existsSubscription(request->client_id, subscribeOp)) {
+        if (mqttService.existsDataInTopic(request->client_id, subscribeOp)) {
+            String data = mqttService.getData(request->client_id, subscribeOp);
+            responseUtils.buildOpResponse(opResponse, response_Result_OK, data.c_str());
         } else {
-            buildResponse(opResponse, response_Result_NO_MSG, NULL);
+            responseUtils.buildOpResponse(opResponse, response_Result_NO_MSG, NULL);
         }
     } else {
-        if (mqttService.subscribe(clientId, subscribeOp)) {
-            buildResponse(opResponse, response_Result_NO_MSG, "Subscribe to topic");
+        if (mqttService.subscribe(request->client_id, subscribeOp)) {
+            responseUtils.buildOpResponse(opResponse, response_Result_NO_MSG, "Subscribe to topic");
         } else {
-            buildResponse(opResponse, response_Result_NOK, "Can not subscribe");
+            responseUtils.buildOpResponse(opResponse, response_Result_NOK, "Can not subscribe");
         }
     }
 }
 
-void pingOpHandler(request_Ping *pingOp, response_OpResponse *opResponse) {
-    printPingOperation(pingOp);
-    buildResponse(opResponse, response_Result_OK, String(pingOp->num).c_str());
+void pingOpHandler(request *request, request_Ping *pingOp, response_OpResponse *opResponse) {
+    responseUtils.buildOpResponse(opResponse, response_Result_OK, String(pingOp->num).c_str());
+}
+
+void requestHandler(request *deserializedRequest, const uint8_t *serializedRequest, int len, response *response) {
+    if (response->opResponses_count > 0) {
+        sendResponseViaUart(response);
+    } else {
+        debugln("Response is empty.");
+    }
 }
 
 void serialDataHandler(const uint8_t *incomingData, int len) {
     debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    response response = manageMessageRequest(incomingData, len, printRequestData, sendOpHandler, subscribeOpHandler, pingOpHandler);
-    if (response.opResponses_count > 0) {
-        sendResponseViaUart(&response);
-    } else {
-        debugln("Response is empty.");
-    }
+    requestUtils.manage(incomingData, len, requestHandler, sendOpHandler, subscribeOpHandler, pingOpHandler);
     debugln("--------------------------------------------------");
 }
 
