@@ -45,6 +45,51 @@ response RequestUtils::manage(request *request,
     return response;
 }
 
+request RequestUtils::createRequest(const char *clientName, uint8_t macWhereToSendTheResponse[6], int32_t messageType) {
+    request request = request_init_zero;
+    strcpy(request.client_id, clientName);
+    request.operations_count = 0;
+    memcpy(request.client_mac, macWhereToSendTheResponse, 6);
+    request.message_type = messageType;
+    return request;
+}
+
+void RequestUtils::buildSendOperation(request *request, const char *payload, const char *queue, bool retain) {
+    request_Operation operationSend = request_Operation_init_zero;
+    operationSend.which_op = request_Operation_send_tag;
+    strcpy(operationSend.op.send.payload, payload);
+    strcpy(operationSend.op.send.queue, queue);
+    operationSend.op.send.persist = retain;
+    addRequestOperationToRequest(request, operationSend);
+}
+
+void RequestUtils::buildSubscribeOperation(request *request, const char *queue, bool clear) {
+    request_Operation operationSubscribe = request_Operation_init_zero;
+    operationSubscribe.which_op = request_Operation_qRequest_tag;
+    strcpy(operationSubscribe.op.qRequest.queue, queue);
+    operationSubscribe.op.qRequest.clear = clear;
+    addRequestOperationToRequest(request, operationSubscribe);
+}
+
+void RequestUtils::buildPingOperation(request *request, int32_t ping) {
+    request_Operation operationPing = request_Operation_init_zero;
+    operationPing.which_op = request_Operation_ping_tag;
+    operationPing.op.ping.num = ping;
+    addRequestOperationToRequest(request, operationPing);
+}
+
+void RequestUtils::addRequestOperationToRequest(request *request, request_Operation requestOperation) {
+    int nextOperationsCount = request->operations_count + 1;
+    request->operations[nextOperationsCount - 1] = requestOperation;
+    request->operations_count = nextOperationsCount;
+}
+
+int RequestUtils::serialize(uint8_t *buffer, request *request) {
+    pb_ostream_t myStream = pb_ostream_from_buffer(buffer, ESPNOW_BUFFERSIZE);
+    pb_encode(&myStream, request_fields, request);
+    return myStream.bytes_written;
+}
+
 bool RequestUtils::deserialize(request *deserializedRequest, const uint8_t *incomingData, int len) {
     pb_istream_t iStream = pb_istream_from_buffer(incomingData, len);
     return pb_decode(&iStream, request_fields, deserializedRequest);

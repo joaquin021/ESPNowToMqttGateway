@@ -27,15 +27,21 @@ class RequestUtils {
     void printSubscribeOperation(request_Subscribe *subscribe);
     void printPingOperation(request_Ping *ping);
     void printUnknownOperation(pb_size_t which_op);
+    void addRequestOperationToRequest(request *request, request_Operation requestOperation);
 
    public:
     static RequestUtils &getInstance() {
         static RequestUtils instance;
         return instance;
     }
+    request createRequest(const char *clientName, uint8_t macWhereToSendTheResponse[6], int32_t messageType = 0);
+    void buildSendOperation(request *request, const char *payload, const char *queue, bool retain = false);
+    void buildSubscribeOperation(request *request, const char *queue, bool clear = true);
+    void buildPingOperation(request *request, int32_t ping);
     response manage(const uint8_t *incomingData, int len,
                     request_handler_t request_handler = requestHandlerDummy, send_op_handler_t send_op_handler = sendOpHandlerDummy,
                     subscribe_op_handler_t subscribe_op_handler = subscribeOpHandlerDummy, ping_op_handler_t ping_op_handler = pingOpHandlerDummy);
+    int serialize(uint8_t *buffer, request *request);
     bool deserialize(request *deserializedRequest, const uint8_t *incomingData, int len);
 };
 
