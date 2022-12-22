@@ -1,5 +1,5 @@
 #ifndef __MQTT_SERVICE_HPP
-#define __MQTT_SERVICE_HPPS
+#define __MQTT_SERVICE_HPP
 
 #include <Arduino.h>
 #include <PubSubClient.h>
@@ -9,14 +9,14 @@
 #include <set>
 
 #include "Commons.hpp"
+#include "MqttConfig.hpp"
 #include "messages.pb.h"
 
 class MqttService {
    private:
     static MqttService *instance;
     static MqttService *getInstance() { return instance; }
-    const char *mqttUsername;
-    const char *mqttPassword;
+    MqttConfig mqttConfig;
     WiFiClient wifiClient;
     PubSubClient mqttClient;
     std::map<String, String> dataFromTopics;
@@ -27,7 +27,7 @@ class MqttService {
     friend void mqttCallback(char *topic, uint8_t *payload, unsigned int len);
 
    public:
-    MqttService(IPAddress mqttServer, uint16_t mqttPort, const char *mqttUsername, const char *mqttPassword);
+    MqttService(MqttConfig mqttConfig);
     ~MqttService();
     void setupMqtt();
     void mqttLoop();

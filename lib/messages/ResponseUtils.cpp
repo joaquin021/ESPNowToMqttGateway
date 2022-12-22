@@ -2,7 +2,7 @@
 
 void ResponseUtils::manage(const uint8_t *incomingData, int len, response_handler_t response_handler, op_responser_handler_t op_responser_handler) {
     response deserializedResponse = response_init_zero;
-    bool deserialized = deserializeResponse(&deserializedResponse, incomingData, len);
+    bool deserialized = deserialize(&deserializedResponse, incomingData, len);
     if (deserialized) {
         printMacAndLenPacket(deserializedResponse.client_mac, len, "Packet to: ");
         manage(&deserializedResponse, op_responser_handler);
@@ -36,13 +36,13 @@ void ResponseUtils::buildOpResponse(response_OpResponse *opResponse, response_Re
     }
 }
 
-int ResponseUtils::serializeResponse(uint8_t *buffer, response *response) {
+int ResponseUtils::serialize(uint8_t *buffer, response *response) {
     pb_ostream_t myStream = pb_ostream_from_buffer(buffer, ESPNOW_BUFFERSIZE);
     pb_encode(&myStream, response_fields, response);
     return myStream.bytes_written;
 }
 
-bool ResponseUtils::deserializeResponse(response *deserializedResponse, const uint8_t *incomingData, int len) {
+bool ResponseUtils::deserialize(response *deserializedResponse, const uint8_t *incomingData, int len) {
     pb_istream_t iStream = pb_istream_from_buffer(incomingData, len);
     return pb_decode(&iStream, response_fields, deserializedResponse);
 }

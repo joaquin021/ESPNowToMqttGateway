@@ -36,7 +36,7 @@ class RequestUtils {
     response manage(const uint8_t *incomingData, int len,
                     request_handler_t request_handler = requestHandlerDummy, send_op_handler_t send_op_handler = sendOpHandlerDummy,
                     subscribe_op_handler_t subscribe_op_handler = subscribeOpHandlerDummy, ping_op_handler_t ping_op_handler = pingOpHandlerDummy);
-    bool deserializeRequest(request *deserializedRequest, const uint8_t *incomingData, int len);
+    bool deserialize(request *deserializedRequest, const uint8_t *incomingData, int len);
 };
 
 #endif

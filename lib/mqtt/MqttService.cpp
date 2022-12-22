@@ -26,12 +26,11 @@ void mqttCallback(char *topic, uint8_t *payload, unsigned int len) {
     debugln("--------------------------------------------------");
 }
 
-MqttService::MqttService(IPAddress mqttServer, uint16_t mqttPort, const char *mqttUsername, const char *mqttPassword) : mqttClient(wifiClient) {
+MqttService::MqttService(MqttConfig mqttConfig) : mqttClient(wifiClient) {
     instance = this;
-    mqttClient.setServer(mqttServer, mqttPort);
+    this->mqttConfig = mqttConfig;
+    mqttClient.setServer(mqttConfig.getServerIp(), mqttConfig.getPort());
     mqttClient.setCallback(mqttCallback);
-    this->mqttUsername = mqttUsername;
-    this->mqttPassword = mqttPassword;
 }
 
 MqttService::~MqttService() {
@@ -53,7 +52,7 @@ void MqttService::mqttLoop() {
 }
 
 void MqttService::mqttConnect() {
-    if (mqttClient.connect(GATEWAY_ID, mqttUsername, mqttPassword, WILL_TOPIC, WILL_QOS, WILL_RETAIN, WILL_MSG)) {
+    if (mqttClient.connect(GATEWAY_ID, mqttConfig.getUsername(), mqttConfig.getPassword(), WILL_TOPIC, WILL_QOS, WILL_RETAIN, WILL_MSG)) {
         debugln("Mqtt connected: " + getMqttStatus());
     } else {
         debugln("Cannot connect to mqtt: " + getMqttStatus());

@@ -29,8 +29,8 @@ class ResponseUtils {
     response createResponse(request *request);
     void buildOpResponse(response_OpResponse *opResponse, response_Result result_code, const char *payload);
     void manage(const uint8_t *incomingData, int len, response_handler_t response_handler = responseHandlerDummy, op_responser_handler_t op_responser_handler = opResponseHandlerDummy);
-    int serializeResponse(uint8_t *buffer, response *response);
-    bool deserializeResponse(response *deserializedResponse, const uint8_t *incomingData, int len);
+    int serialize(uint8_t *buffer, response *response);
+    bool deserialize(response *deserializedResponse, const uint8_t *incomingData, int len);
 };
 
 #endif

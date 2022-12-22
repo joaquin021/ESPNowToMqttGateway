@@ -4,7 +4,7 @@ response RequestUtils::manage(const uint8_t *incomingData, int len,
                               request_handler_t request_handler, send_op_handler_t send_op_handler, subscribe_op_handler_t subscribe_op_handler, ping_op_handler_t ping_op_handler) {
     request deserializedRequest = request_init_default;
     response response = response_init_zero;
-    bool deserialized = deserializeRequest(&deserializedRequest, incomingData, len);
+    bool deserialized = deserialize(&deserializedRequest, incomingData, len);
 
     if (deserialized) {
         printMacAndLenPacket(deserializedRequest.client_mac, len, "Packet received from: ");
@@ -45,7 +45,7 @@ response RequestUtils::manage(request *request,
     return response;
 }
 
-bool RequestUtils::deserializeRequest(request *deserializedRequest, const uint8_t *incomingData, int len) {
+bool RequestUtils::deserialize(request *deserializedRequest, const uint8_t *incomingData, int len) {
     pb_istream_t iStream = pb_istream_from_buffer(incomingData, len);
     return pb_decode(&iStream, request_fields, deserializedRequest);
 }
