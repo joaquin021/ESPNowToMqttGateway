@@ -1,84 +1,22 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <esp_now.h>
 
 #include "Commons.hpp"
-#include "RequestUtils.hpp"
-#include "UartHandler.hpp"
-#include "messages.pb.h"
+#include "EspNowToSerialManager.hpp"
+#include "SerialToMqttManager.hpp"
 
 #define RX_PIN 2
 #define TX_PIN 15
 
-ResponseUtils responseUtils = ResponseUtils::getInstance();
-
-void EspNowPair(const uint8_t *mac) {
-    bool existPeer = esp_now_is_peer_exist(mac);
-    if (!existPeer) {
-        esp_now_peer_info_t peerInfo;
-        memcpy(peerInfo.peer_addr, mac, 6);
-        peerInfo.channel = 0;
-        peerInfo.encrypt = false;
-        if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-            debugln("Failed to add peer");
-        }
-    }
-}
-
-void sendResponseViaEspNow(const uint8_t *mac, const uint8_t *outputData, int len) {
-    EspNowPair(mac);
-    esp_err_t result = esp_now_send(mac, outputData, len);
-    if (result == ESP_OK) {
-        debugln("The response was sent sucessfully via ESP-NOW.");
-    } else {
-        debugln("There was an error sending via ESP-NOW the response.");
-    }
-}
-
-void responseHandler(response *deserializedResponse, const uint8_t *serializedResponse, int len) {
-    sendResponseViaEspNow(deserializedResponse->client_mac, serializedResponse, len);
-}
-
-void OnRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
-    debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    printMacAndLenPacket(mac, len, "Packet received from: ");
-    writeToUart(incomingData, len);
-    debugln("--------------------------------------------------");
-}
-/*
-void onSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-    debugln("Send success via esp-now.");
-}
-*/
-void serialDataHandler(const uint8_t *incomingData, int len) {
-    debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    responseUtils.manage(incomingData, len, responseHandler, opResponseHandlerDummy);
-    debugln("--------------------------------------------------");
-}
-
-void setupWiFi() {
-    WiFi.mode(WIFI_MODE_STA);
-    debugln("Gateway mac: " + WiFi.macAddress());
-}
-
-void setupEspNow() {
-    if (esp_now_init() != ESP_OK) {
-        debugln("There was an error initializing ESP-NOW");
-        return;
-    }
-    esp_now_register_recv_cb(OnRecv);
-    // esp_now_register_send_cb(onSent);
-}
+EspNowToSerialManager espNowToSerialManager;
 
 void setup() {
     Serial.begin(BAUD_RATE);
     Serial2.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
 
-    setupWiFi();
-    setupEspNow();
+    espNowToSerialManager.setup();
 }
 
 void loop() {
-    readFromUart(serialDataHandler);
+    espNowToSerialManager.loop();
     delay(500);
 }

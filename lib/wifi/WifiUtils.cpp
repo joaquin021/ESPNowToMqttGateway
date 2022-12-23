@@ -12,4 +12,10 @@ void connectToWiFi(WiFiConfig wifiConfig) {
     debugln("WiFi connected.");
     debug("IP address: ");
     debugln(WiFi.localIP());
+    debugln("Mac: " + WiFi.macAddress());
+}
+
+void setupWiFiForEspNow() {
+    WiFi.mode(WIFI_MODE_STA);
+    debugln("Mac: " + WiFi.macAddress());
 }

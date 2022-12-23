@@ -7,5 +7,6 @@
 #include "WifiConfig.hpp"
 
 void connectToWiFi(WiFiConfig wifiConfig);
+void setupWiFiForEspNow();
 
 #endif
