@@ -3,8 +3,6 @@
 
 #include "Arduino.h"
 
-#define DEBUG_FLAG
-
 #ifdef DEBUG_FLAG
 #define debug Serial.print
 #define debugln Serial.println

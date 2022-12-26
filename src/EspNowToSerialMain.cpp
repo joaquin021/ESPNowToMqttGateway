@@ -2,7 +2,6 @@
 
 #include "Commons.hpp"
 #include "EspNowToSerialManager.hpp"
-#include "SerialToMqttManager.hpp"
 
 #define RX_PIN 2
 #define TX_PIN 15
