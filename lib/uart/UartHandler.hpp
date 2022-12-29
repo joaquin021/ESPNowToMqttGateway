@@ -7,6 +7,9 @@
 #include "RequestUtils.hpp"
 #include "messages.pb.h"
 
+#define BAUD_RATE 115200
+#define END_TX_CHAR '|'
+
 typedef void (*uart_read_cb_t)(const uint8_t *incomingData, int len);
 
 void readFromUart(uart_read_cb_t uart_read_cb);

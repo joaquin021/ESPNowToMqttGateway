@@ -1,5 +1,6 @@
 #include "MqttService.hpp"
 
+#define GATEWAY_ID "ESPNowToMqttGateway"
 #define WILL_TOPIC GATEWAY_ID "/will"
 #define WILL_QOS 1
 #define WILL_RETAIN false
