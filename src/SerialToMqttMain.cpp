@@ -16,7 +16,7 @@ SerialToMqttManager serialToMqttManager(wiFiConfig, mqttConfig);
 
 void setup() {
     Serial.begin(BAUD_RATE);
-    Serial2.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
+    Serial2.begin(BAUD_RATE);
 
     serialToMqttManager.setup();
 }
