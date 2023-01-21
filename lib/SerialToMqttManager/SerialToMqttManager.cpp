@@ -9,7 +9,7 @@ void requestHandler(request *deserializedRequest, const uint8_t *serializedReque
     if (response->opResponses_count > 0) {
         instance->sendResponseViaUart(response);
     } else {
-        debugln("Response is empty.");
+        logDebugln("Response is empty.");
     }
 }
 
@@ -49,9 +49,9 @@ void pingOpHandler(request *request, request_Ping *pingOp, response_OpResponse *
 }
 
 void serialDataHandler(const uint8_t *incomingData, int len) {
-    debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    logDebugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     requestUtils.manage(incomingData, len, requestHandler, sendOpHandler, subscribeOpHandler, pingOpHandler);
-    debugln("--------------------------------------------------");
+    logDebugln("--------------------------------------------------");
 }
 
 SerialToMqttManager::SerialToMqttManager(WiFiConfig wifiConfig, MqttConfig mqttConfig) : mqttService(mqttConfig) {

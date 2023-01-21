@@ -5,8 +5,8 @@ void readFromUart(uart_read_cb_t uart_read_cb) {
         uint8_t buffer[ESPNOW_BUFFERSIZE];
         int bytesRead = Serial2.readBytesUntil(END_TX_CHAR, buffer, ESPNOW_BUFFERSIZE);
         if (bytesRead > 0) {
-            debug("Bytes read from Serial2: ");
-            debugln(bytesRead);
+            logDebug("Bytes read from Serial2: ");
+            logDebugln(bytesRead);
             uart_read_cb(buffer, bytesRead);
         }
     }

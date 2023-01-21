@@ -17,11 +17,10 @@ SerialToMqttManager serialToMqttManager(wiFiConfig, mqttConfig);
 void setup() {
     Serial.begin(BAUD_RATE);
     Serial2.begin(BAUD_RATE);
-
+    logDebugln("Serial to Mqtt");
     serialToMqttManager.setup();
 }
 
 void loop() {
     serialToMqttManager.loop();
-    delay(500);
 }

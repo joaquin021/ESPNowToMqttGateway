@@ -11,11 +11,11 @@ EspNowToSerialManager espNowToSerialManager;
 void setup() {
     Serial.begin(BAUD_RATE);
     Serial2.begin(BAUD_RATE);
+    logDebugln("EspNow to Serial");
 
     espNowToSerialManager.setup();
 }
 
 void loop() {
     espNowToSerialManager.loop();
-    delay(500);
 }

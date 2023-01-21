@@ -9,16 +9,16 @@ void responseHandler(response *deserializedResponse, const uint8_t *serializedRe
 }
 
 void serialDataHandler(const uint8_t *incomingData, int len) {
-    debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    logDebugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     responseUtils.manage(incomingData, len, responseHandler, opResponseHandlerDummy);
-    debugln("--------------------------------------------------");
+    logDebugln("--------------------------------------------------");
 }
 
 void espNowRecvCallBack(const uint8_t *mac, const uint8_t *incomingData, int len) {
-    debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    logDebugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     printMacAndLenPacket(mac, len, "Packet received from: ");
     writeToUart(incomingData, len);
-    debugln("--------------------------------------------------");
+    logDebugln("--------------------------------------------------");
 }
 
 EspNowToSerialManager::EspNowToSerialManager() {

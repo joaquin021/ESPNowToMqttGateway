@@ -12,8 +12,8 @@ String MQTT_STATUS_NEGATIVE[] = {"", "MQTT_DISCONNECTED", "MQTT_CONNECT_FAILED",
 MqttService *MqttService::instance = nullptr;
 
 void mqttCallback(char *topic, uint8_t *payload, unsigned int len) {
-    debugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    debugf("> Packet received via Mqtt.\n>>> Topic: %s\n>>> Len: %d\n", topic, len);
+    logDebugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    logDebugf("> Packet received via Mqtt.\n>>> Topic: %s\n>>> Len: %d\n", topic, len);
     MqttService *instance = MqttService::getInstance();
     if (len == 0) {
         instance->dataFromTopics.erase(topic);
@@ -24,7 +24,7 @@ void mqttCallback(char *topic, uint8_t *payload, unsigned int len) {
         String strPayload(charPayload);
         instance->dataFromTopics[String(topic)] = strPayload;
     }
-    debugln("--------------------------------------------------");
+    logDebugln("--------------------------------------------------");
 }
 
 MqttService::MqttService(MqttConfig mqttConfig) : mqttClient(wifiClient) {
@@ -54,9 +54,9 @@ void MqttService::mqttLoop() {
 
 void MqttService::mqttConnect() {
     if (mqttClient.connect(GATEWAY_ID, mqttConfig.getUsername(), mqttConfig.getPassword(), WILL_TOPIC, WILL_QOS, WILL_RETAIN, WILL_MSG)) {
-        debugln("Mqtt connected: " + getMqttStatus());
+        logDebugln("Mqtt connected: " + getMqttStatus());
     } else {
-        debugln("Cannot connect to mqtt: " + getMqttStatus());
+        logDebugln("Cannot connect to mqtt: " + getMqttStatus());
     }
 }
 
@@ -64,7 +64,7 @@ void MqttService::resubscribe() {
     for (String subscription : this->subscriptions) {
         mqttClient.subscribe(subscription.c_str());
     }
-    debugf("Resubscribed to %d topics\n", this->subscriptions.size());
+    logDebugf("Resubscribed to %d topics\n", this->subscriptions.size());
 }
 
 String MqttService::getMqttStatus() {
@@ -79,7 +79,7 @@ bool MqttService::isMqttConnected() {
 bool MqttService::publishMqtt(char *clientId, request_Send *send) {
     bool sendStatus = mqttClient.publish(buildQueueName(clientId, send->queue).c_str(), send->payload, send->persist);
     if (!sendStatus) {
-        debugln("Error publishing mqtt message.");
+        logDebugln("Error publishing mqtt message.");
     }
     return sendStatus;
 }
