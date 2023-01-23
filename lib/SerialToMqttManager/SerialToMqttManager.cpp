@@ -19,10 +19,10 @@ void sendOpHandler(request *request, request_Send *send, response_OpResponse *op
         if (instance->mqttService.publishMqtt(request->client_id, send)) {
             responseUtils.buildOpResponse(opResponse, response_Result_OK, NULL);
         } else {
-            responseUtils.buildOpResponse(opResponse, response_Result_NOK, "Error publishing the mqtt message");
+            responseUtils.buildOpResponse(opResponse, response_Result_ERROR, "Error publishing the mqtt message");
         }
     } else {
-        responseUtils.buildOpResponse(opResponse, response_Result_NOMQTT, instance->mqttService.getMqttStatus().c_str());
+        responseUtils.buildOpResponse(opResponse, response_Result_MQTT_ERROR, instance->mqttService.getMqttStatus().c_str());
     }
 }
 
@@ -33,13 +33,13 @@ void subscribeOpHandler(request *request, request_Subscribe *subscribeOp, respon
             String data = instance->mqttService.getData(request->client_id, subscribeOp);
             responseUtils.buildOpResponse(opResponse, response_Result_OK, data.c_str());
         } else {
-            responseUtils.buildOpResponse(opResponse, response_Result_NO_MSG, NULL);
+            responseUtils.buildOpResponse(opResponse, response_Result_SUBSCRIBED_OK, NULL);
         }
     } else {
         if (instance->mqttService.subscribe(request->client_id, subscribeOp)) {
-            responseUtils.buildOpResponse(opResponse, response_Result_NO_MSG, "Subscribe to topic");
+            responseUtils.buildOpResponse(opResponse, response_Result_SUBSCRIBED_OK, "Subscribe to topic");
         } else {
-            responseUtils.buildOpResponse(opResponse, response_Result_NOK, "Can not subscribe");
+            responseUtils.buildOpResponse(opResponse, response_Result_ERROR, "Can not subscribe");
         }
     }
 }
@@ -50,7 +50,7 @@ void pingOpHandler(request *request, request_Ping *pingOp, response_OpResponse *
 
 void serialDataHandler(const uint8_t *incomingData, int len) {
     logDebugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    requestUtils.manage(incomingData, len, requestHandler, sendOpHandler, subscribeOpHandler, pingOpHandler);
+    requestUtils.manage(incomingData, len, requestHandler, sendOpHandler, subscribeOpHandler, unSubscribeOpHandlerDummy, pingOpHandler);
     logDebugln("--------------------------------------------------");
 }
 

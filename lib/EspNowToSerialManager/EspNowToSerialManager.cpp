@@ -5,7 +5,7 @@ ResponseUtils responseUtils = ResponseUtils::getInstance();
 
 void responseHandler(response *deserializedResponse, const uint8_t *serializedResponse, int len) {
     EspNowToSerialManager *instance = EspNowToSerialManager::getInstance();
-    instance->espNowService.send(deserializedResponse->client_mac, serializedResponse, len);
+    instance->espNowService.send(deserializedResponse->to_mac, serializedResponse, len);
 }
 
 void serialDataHandler(const uint8_t *incomingData, int len) {

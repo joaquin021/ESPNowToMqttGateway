@@ -97,9 +97,7 @@ String MqttService::getData(char *clientId, request_Subscribe *subscribeOp) {
     String queue = buildQueueName(clientId, subscribeOp->queue);
     std::map<String, String>::iterator dataPair = dataFromTopics.find(queue);
     String data = dataPair->second;
-    if (subscribeOp->clear) {
-        dataFromTopics.erase(dataPair);
-    }
+    dataFromTopics.erase(dataPair);
     return data;
 }
 
