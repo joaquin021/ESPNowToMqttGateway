@@ -12,6 +12,13 @@ void readFromUart(uart_read_cb_t uart_read_cb) {
     }
 }
 
+uint8_t sendResponseViaUart(response *response) {
+    uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
+    int messageLength = ResponseUtils::getInstance().serialize(serializedBuffer, response);
+    writeToUart(serializedBuffer, messageLength);
+    return messageLength;
+}
+
 void writeToUart(const uint8_t *buffer, size_t size) {
     Serial2.write(buffer, size);
     Serial2.write(END_TX_CHAR);

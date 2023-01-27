@@ -5,9 +5,8 @@ RequestUtils requestUtils = RequestUtils::getInstance();
 ResponseUtils responseUtils = ResponseUtils::getInstance();
 
 void requestHandler(request *deserializedRequest, const uint8_t *serializedRequest, int len, response *response) {
-    SerialToMqttManager *instance = SerialToMqttManager::getInstance();
     if (response->opResponses_count > 0) {
-        instance->sendResponseViaUart(response);
+        sendResponseViaUart(response);
     } else {
         logDebugln("Response is empty.");
     }
@@ -28,19 +27,10 @@ void sendOpHandler(request *request, request_Send *send, response_OpResponse *op
 
 void subscribeOpHandler(request *request, request_Subscribe *subscribeOp, response_OpResponse *opResponse) {
     SerialToMqttManager *instance = SerialToMqttManager::getInstance();
-    if (instance->mqttService.existsSubscription(request->client_id, subscribeOp)) {
-        if (instance->mqttService.existsDataInTopic(request->client_id, subscribeOp)) {
-            String data = instance->mqttService.getData(request->client_id, subscribeOp);
-            responseUtils.buildOpResponse(opResponse, response_Result_OK, data.c_str());
-        } else {
-            responseUtils.buildOpResponse(opResponse, response_Result_SUBSCRIBED_OK, NULL);
-        }
+    if (instance->mqttService.subscribe(request, subscribeOp)) {
+        responseUtils.buildOpResponse(opResponse, response_Result_SUBSCRIBED_OK, NULL);
     } else {
-        if (instance->mqttService.subscribe(request->client_id, subscribeOp)) {
-            responseUtils.buildOpResponse(opResponse, response_Result_SUBSCRIBED_OK, "Subscribe to topic");
-        } else {
-            responseUtils.buildOpResponse(opResponse, response_Result_ERROR, "Can not subscribe");
-        }
+        responseUtils.buildOpResponse(opResponse, response_Result_ERROR, "Can not subscribe");
     }
 }
 
@@ -67,11 +57,4 @@ void SerialToMqttManager::setup() {
 void SerialToMqttManager::loop() {
     mqttService.mqttLoop();
     readFromUart(serialDataHandler);
-}
-
-uint8_t SerialToMqttManager::sendResponseViaUart(response *response) {
-    uint8_t serializedBuffer[ESPNOW_BUFFERSIZE];
-    int messageLength = ResponseUtils::getInstance().serialize(serializedBuffer, response);
-    writeToUart(serializedBuffer, messageLength);
-    return messageLength;
 }

@@ -10,7 +10,38 @@
 
 #include "Commons.hpp"
 #include "MqttConfig.hpp"
+#include "UartHandler.hpp"
 #include "messages.pb.h"
+
+struct subscription_client_data {
+    int32_t message_type;
+    int32_t operation_type;
+    unsigned long subscribed_since;
+};
+
+struct mac_address {
+    uint8_t address[6];
+
+    bool operator==(const mac_address &other) const {
+        for (int i = 0; i < 6; i++) {
+            if (address[i] != other.address[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator<(const mac_address &other) const {
+        for (int i = 0; i < 6; i++) {
+            if (address[i] < other.address[i]) {
+                return true;
+            } else if (address[i] > other.address[i]) {
+                return false;
+            }
+        }
+        return false;
+    }
+};
 
 class MqttService {
    private:
@@ -19,12 +50,15 @@ class MqttService {
     MqttConfig mqttConfig;
     WiFiClient wifiClient;
     PubSubClient mqttClient;
-    std::map<String, String> dataFromTopics;
-    std::set<String> subscriptions;
-    String buildQueueName(char *clientId, char *name);
+    std::map<std::string, std::map<mac_address, subscription_client_data>> subscriptions;
+    std::string buildQueueName(char *clientId, char *name);
     void mqttConnect();
     void resubscribe();
+    bool isSubscription(std::string queue);
+    bool isSubscriptionForClient(std::string queue, uint8_t address[6]);
+    void registerSubscription(std::string queue, request *request, request_Subscribe *subscribeOp);
     friend void mqttCallback(char *topic, uint8_t *payload, unsigned int len);
+    friend response createResponseFromMqtt(mac_address mac, subscription_client_data clientData, uint8_t *payload, unsigned int len);
 
    public:
     MqttService(MqttConfig mqttConfig);
@@ -34,10 +68,9 @@ class MqttService {
     String getMqttStatus();
     bool isMqttConnected();
     bool publishMqtt(char *clientId, request_Send *send);
-    bool subscribe(char *clientId, request_Subscribe *subscribeOp);
-    String getData(char *clientId, request_Subscribe *subscribeOp);
-    bool existsSubscription(char *clientId, request_Subscribe *subscribeOp);
-    bool existsDataInTopic(char *clientId, request_Subscribe *subscribeOp);
+    bool subscribe(request *request, request_Subscribe *subscribeOp);
+    bool unSubscribe(request *request, request_Subscribe *subscribeOp);
+    bool unSubscribe(std::string queue);
 };
 
 #endif

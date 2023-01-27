@@ -11,18 +11,33 @@ String MQTT_STATUS_NEGATIVE[] = {"", "MQTT_DISCONNECTED", "MQTT_CONNECT_FAILED",
 
 MqttService *MqttService::instance = nullptr;
 
+uint8_t gatewayAddress[6] = {0x90, 0x38, 0x0C, 0xED, 0x87, 0x40};
+
+response createResponseFromMqtt(mac_address mac, subscription_client_data clientData, uint8_t *payload, unsigned int len) {
+    response response = response_init_zero;
+    response.opResponses_count = 1;
+    memcpy(response.from_mac, gatewayAddress, sizeof(gatewayAddress));
+    memcpy(response.to_mac, mac.address, sizeof(mac.address));
+    response.message_type = clientData.message_type;
+    response.opResponses[0].operation_type = clientData.operation_type;
+    memcpy(response.opResponses[0].payload, payload, sizeof(payload));
+    response.opResponses[0].payload[len] = 0;
+    response.opResponses[0].result_code = response_Result_OK;
+    return response;
+}
+
 void mqttCallback(char *topic, uint8_t *payload, unsigned int len) {
     logDebugln("++++++++++++++++++++++++++++++++++++++++++++++++++");
     logDebugf("> Packet received via Mqtt.\n>>> Topic: %s\n>>> Len: %d\n", topic, len);
     MqttService *instance = MqttService::getInstance();
-    if (len == 0) {
-        instance->dataFromTopics.erase(topic);
-    } else {
-        char charPayload[len + 1];
-        memcpy(charPayload, payload, len);
-        charPayload[len] = 0;
-        String strPayload(charPayload);
-        instance->dataFromTopics[String(topic)] = strPayload;
+    if (len != 0) {
+        if (instance->isSubscription(topic)) {
+            std::map<mac_address, subscription_client_data> clientsForQueue = instance->subscriptions.find(topic)->second;
+            for (auto clientsIterator = clientsForQueue.begin(); clientsIterator != clientsForQueue.end(); clientsIterator++) {
+                response response = createResponseFromMqtt(clientsIterator->first, clientsIterator->second, payload, len);
+                sendResponseViaUart(&response);
+            }
+        }
     }
     logDebugln("--------------------------------------------------");
 }
@@ -61,8 +76,8 @@ void MqttService::mqttConnect() {
 }
 
 void MqttService::resubscribe() {
-    for (String subscription : this->subscriptions) {
-        mqttClient.subscribe(subscription.c_str());
+    for (auto it = subscriptions.begin(); it != subscriptions.end(); it++) {
+        mqttClient.subscribe(it->first.c_str());
     }
     logDebugf("Resubscribed to %d topics\n", this->subscriptions.size());
 }
@@ -84,15 +99,55 @@ bool MqttService::publishMqtt(char *clientId, request_Send *send) {
     return sendStatus;
 }
 
-bool MqttService::subscribe(char *clientId, request_Subscribe *subscribeOp) {
-    String queue = buildQueueName(clientId, subscribeOp->queue);
-    bool result = mqttClient.subscribe(queue.c_str());
-    if (result) {
-        subscriptions.insert(queue);
+bool MqttService::subscribe(request *request, request_Subscribe *subscribeOp) {
+    std::string queue = buildQueueName(request->client_id, subscribeOp->queue);
+    logDebugf("Subscription request from: %02x:%02x:%02x:%02x:%02x:%02x, topic: %s\n", request->from_mac[0], request->from_mac[1],
+              request->from_mac[2], request->from_mac[3], request->from_mac[4], request->from_mac[5], queue.c_str());
+    bool existsSubscription = isSubscription(queue);
+    if (!existsSubscription) {
+        logDebugln("There is not subscription for this topic. Subscribing...");
+        existsSubscription = mqttClient.subscribe(queue.c_str());
     }
-    return result;
+    if (existsSubscription && !isSubscriptionForClient(queue, request->from_mac)) {
+        logDebugln("There is no subscription for this client in this topic. Subscribing...");
+        registerSubscription(queue, request, subscribeOp);
+    }
+    return existsSubscription;
 }
 
+bool MqttService::unSubscribe(request *request, request_Subscribe *subscribeOp) {
+    std::string queue = buildQueueName(request->client_id, subscribeOp->queue);
+    return false;
+}
+
+bool MqttService::unSubscribe(std::string queue) {
+    return mqttClient.unsubscribe(queue.c_str());
+}
+
+void MqttService::registerSubscription(std::string queue, request *request, request_Subscribe *subscribeOp) {
+    subscription_client_data clientData = {request->message_type, subscribeOp->operation_type, millis()};
+    mac_address clientMac;
+    memcpy(clientMac.address, request->from_mac, 6);
+    subscriptions[queue][clientMac] = clientData;
+}
+
+bool MqttService::isSubscriptionForClient(std::string queue, uint8_t address[6]) {
+    mac_address clientMac;
+    memcpy(clientMac.address, address, 6);
+    if (isSubscription(queue)) {
+        logDebugln("Checking if subscription exists for this client.");
+        std::map<mac_address, subscription_client_data> clientsForQueue = subscriptions.find(queue)->second;
+        return clientsForQueue.find(clientMac) != clientsForQueue.end();
+    }
+    return false;
+}
+
+bool MqttService::isSubscription(std::string queue) {
+    logDebugln("Checking if subscription exists.");
+    return subscriptions.find(queue) != subscriptions.end();
+}
+
+/*
 String MqttService::getData(char *clientId, request_Subscribe *subscribeOp) {
     String queue = buildQueueName(clientId, subscribeOp->queue);
     std::map<String, String>::iterator dataPair = dataFromTopics.find(queue);
@@ -101,21 +156,16 @@ String MqttService::getData(char *clientId, request_Subscribe *subscribeOp) {
     return data;
 }
 
-bool MqttService::existsSubscription(char *clientId, request_Subscribe *subscribeOp) {
-    String queue = buildQueueName(clientId, subscribeOp->queue);
-    return subscriptions.find(queue) != subscriptions.end();
-}
-
 bool MqttService::existsDataInTopic(char *clientId, request_Subscribe *subscribeOp) {
     String queue = buildQueueName(clientId, subscribeOp->queue);
     return dataFromTopics.find(queue) != dataFromTopics.end();
 }
+*/
 
-String MqttService::buildQueueName(char *clientId, char *name) {
-    String queue = String(GATEWAY_ID);
-    queue.concat("/");
-    queue.concat(clientId);
-    queue.concat("/");
-    queue.concat(name);
-    return queue;
+std::string MqttService::buildQueueName(char *clientId, char *name) {
+    return std::string(GATEWAY_ID)
+        .append("/")
+        .append(clientId)
+        .append("/")
+        .append(name);
 }

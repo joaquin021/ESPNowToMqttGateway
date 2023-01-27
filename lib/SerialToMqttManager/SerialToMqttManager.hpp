@@ -16,7 +16,6 @@ class SerialToMqttManager {
     static SerialToMqttManager *getInstance() { return instance; }
     WiFiConfig wifiConfig;
     MqttService mqttService;
-    uint8_t sendResponseViaUart(response *response);
     friend void serialDataHandler(const uint8_t *incomingData, int len);
     friend void requestHandler(request *deserializedRequest, const uint8_t *serializedRequest, int len, response *response);
     friend void sendOpHandler(request *request, request_Send *send, response_OpResponse *opResponse);
