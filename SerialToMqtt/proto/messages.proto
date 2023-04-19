@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+message request {
+  message Ping {
+    int32 operation_type = 1;
+    int32 num = 2;
+  }
+  message Send {
+    int32 operation_type = 1;
+    string queue = 2;
+    string payload = 3;
+    bool persist = 4;
+  }
+  message Subscribe {
+    int32 operation_type = 1;
+    string queue = 2;
+  }
+  message Unsubscribe {
+    int32 operation_type = 1;
+    string queue = 2;
+  }
+  message Operation {
+    oneof op {
+      Ping ping = 1;
+      Send send = 2;
+      Subscribe subscribe = 3;
+      Unsubscribe unsubscribe = 4;
+    }
+  }
+  bytes from_mac = 1;
+  bytes to_mac = 2;
+  string client_id = 3;
+  int32 message_type = 4;
+  repeated Operation operations = 5;
+}
+
+message response {
+  enum Result {
+    OK = 0;         // send, ping or recevie ok
+    SUBSCRIBED_OK = 1;
+    UNSUBSCRIBED_OK = 3;
+    ERROR = 5;
+    MQTT_ERROR = 7;
+  }
+  message OpResponse {
+    int32 operation_type = 1;
+    Result result_code = 2;
+    string payload = 3;
+  }
+  bytes from_mac = 1;
+  bytes to_mac = 2;
+  int32 message_type = 3;
+  repeated OpResponse opResponses = 4;
+}

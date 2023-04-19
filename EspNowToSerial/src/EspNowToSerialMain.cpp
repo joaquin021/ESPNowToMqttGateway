@@ -9,8 +9,10 @@
 EspNowToSerialManager espNowToSerialManager;
 
 void setup() {
-    Serial.begin(BAUD_RATE);
-    Serial2.begin(BAUD_RATE);
+    Serial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
+    Serial2.begin(BAUD_RATE, SERIAL_8N1, RX, TX);
+    //Serial.begin(BAUD_RATE);
+    //Serial2.begin(BAUD_RATE);
     logDebugln("EspNow to Serial");
 
     espNowToSerialManager.setup();

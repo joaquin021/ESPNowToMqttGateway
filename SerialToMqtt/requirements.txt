@@ -1,0 +1,5 @@
+pyserial==3.5
+paho-mqtt==1.6.1
+trio==0.22.0
+protobuf==3.12.4
+trio-serial==0.3.0

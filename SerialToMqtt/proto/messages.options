@@ -1,0 +1,8 @@
+
+*queue                  max_size:16
+*payload                max_size:128
+response.opResponses    max_count:5
+request.client_id       max_size:16
+request.operations      max_count:5
+*from_mac              max_size:6, fixed_length:true
+*to_mac                max_size:6, fixed_length:true
