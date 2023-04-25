@@ -1,3 +1,5 @@
+import logging
+
 import serial
 import trio
 from trio_serial import SerialStream
@@ -13,12 +15,12 @@ class SerialAsyncHelper:
         self.read_from_uart_callback = read_from_uart_callback
 
     async def handle_serial_messages(self):
-        print("Starting serial message handler")
+        logging.info("Starting serial message handler")
         async with SerialStream(SERIAL_PORT, baudrate=115200) as ser:
             buffer = b""
             while True:
                 received_data = await ser.receive_some(200)
-                print(received_data)
+                logging.debug(received_data)
                 if received_data:
                     buffer += received_data
                     while b"|" in buffer:
@@ -26,7 +28,7 @@ class SerialAsyncHelper:
                         self.read_from_uart_callback(message)
 
     async def serial_loop(self):
-        print("Starting serial loop")
+        logging.info("Starting serial loop")
         async with trio.open_nursery() as nursery:
             nursery.start_soon(self.handle_serial_messages)
 

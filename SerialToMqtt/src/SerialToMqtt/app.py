@@ -1,3 +1,5 @@
+import logging
+import os
 import time
 
 import trio as trio
@@ -9,11 +11,12 @@ manager = SerialToMqttManager()
 
 async def loop():
     while True:
-        print("Starting main loop")
+        logging.info("Starting main loop")
         await manager.run_mqtt_and_serial_threads()
         time.sleep(5)
-        print("Restarting main loop")
+        logging.warning("Restarting main loop")
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=os.environ.get("LOG_LEVEL", "WARNING"))
     trio.run(loop)
