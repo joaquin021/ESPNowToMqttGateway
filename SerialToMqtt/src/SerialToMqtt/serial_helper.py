@@ -3,7 +3,7 @@ import trio
 from trio_serial import SerialStream
 
 SERIAL_PORT = '/dev/ttyACM0'
-# SERIAL_PORT = '/dev/ttyUSB2'
+# SERIAL_PORT = '/dev/ttyUSB1'
 BAUD_RATE = 115200
 
 

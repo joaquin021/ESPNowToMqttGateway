@@ -1,16 +1,23 @@
 import traceback
 
 import trio
+import os
 
 from messages_pb2 import request, response
-from mqtt_helper import MqttAsyncHelper
+from mqtt_helper import MqttAsyncHelper, MqttConfig
 from serial_helper import SerialAsyncHelper
 
 
 class SerialToMqttManager:
     def __init__(self):
-        self.mqtt_helper = MqttAsyncHelper()
         self.serial_helper = SerialAsyncHelper(self.read_from_uart_callback)
+        mqtt_config = MqttConfig.Builder(os.environ['GATEWAY_ID'], os.environ['GATEWAY_MAC']) \
+            .with_host(os.environ['MQTT_HOST']) \
+            .with_port(int(os.environ['MQTT_PORT'])) \
+            .with_user(os.environ['MQTT_USER']) \
+            .with_password(os.environ['MQTT_PASSWORD']) \
+            .build()
+        self.mqtt_helper = MqttAsyncHelper(mqtt_config, self.serial_helper)
 
     async def run_mqtt_and_serial_threads(self):
         try:
@@ -37,8 +44,7 @@ class SerialToMqttManager:
         for operation in request_message.operations:
             if operation.WhichOneof('op') == "send":
                 # print(operation.send)
-                self.mqtt_helper.send_mqtt_message(request_message.client_id, operation.send.queue,
-                                                   operation.send.payload)
+                self.mqtt_helper.publish(request_message, operation.send)
                 op_response = response.OpResponse()
                 op_response.operation_type = operation.send.operation_type
                 op_response.result_code = response.Result.OK
@@ -47,7 +53,7 @@ class SerialToMqttManager:
 
             if operation.WhichOneof('op') == "subscribe":
                 # print(operation.subscribe)
-                self.mqtt_helper.subscribe_mqtt_queue(request_message.client_id, operation.subscribe.queue)
+                self.mqtt_helper.subscribe(request_message, operation.subscribe)
                 op_response = response.OpResponse()
                 op_response.operation_type = operation.subscribe.operation_type
                 op_response.result_code = response.Result.SUBSCRIBED_OK
