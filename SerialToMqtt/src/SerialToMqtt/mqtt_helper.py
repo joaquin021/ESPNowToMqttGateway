@@ -8,6 +8,8 @@ import trio
 from messages_pb2 import request, response
 from serial_helper import SerialAsyncHelper
 
+LOGGER = logging.getLogger("MqttAsyncHelper")
+
 
 class MqttConfig:
     def __init__(self, builder: 'MqttConfig.Builder'):
@@ -75,13 +77,13 @@ class MqttAsyncHelper:
             self.client.loop_write()
 
     async def _misc_loop(self):
-        logging.info("misc_loop started")
+        LOGGER.info("misc_loop started")
         while self.client.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
             await trio.sleep(1)
-        logging.warning("misc_loop finished")
+        LOGGER.warning("misc_loop finished")
 
     async def mqtt_loop(self):
-        logging.info("Starting mqtt loop")
+        LOGGER.info("Starting mqtt loop")
         self.client.username_pw_set(self.mqtt_config.user, self.mqtt_config.password)
         self.client.connect(self.mqtt_config.host, self.mqtt_config.port)
         async with trio.open_nursery() as nursery:
@@ -90,32 +92,32 @@ class MqttAsyncHelper:
             nursery.start_soon(self._misc_loop)
 
     def _on_socket_open(self, client, userdata, sock):
-        logging.info("Socket opened")
+        LOGGER.info("Socket opened")
         self.sock = sock
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2048)
 
     def _on_socket_register_write(self, client, userdata, sock):
-        logging.debug('large write request')
+        LOGGER.debug('large write request')
         self._event_large_write.set()
 
     def _on_socket_unregister_write(self, client, userdata, sock):
-        logging.debug("finished large write")
+        LOGGER.debug("finished large write")
         self._event_large_write = trio.Event()
 
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            logging.info("MQTT connected")
+            LOGGER.info("MQTT connected")
         else:
-            logging.error(f"MQTT connection failed with error code {rc}")
+            LOGGER.error(f"MQTT connection failed with error code {rc}")
 
     def _on_disconnect(self, client, userdata, rc):
         if rc == mqtt.MQTT_ERR_SUCCESS:
-            logging.warning("MQTT disconnected")
+            LOGGER.warning("MQTT disconnected")
         else:
-            logging.error(f"MQTT disconnection failed with error code {rc}")
+            LOGGER.error(f"MQTT disconnection failed with error code {rc}")
 
     def _on_mqtt_message(self, client, userdata, message):
-        logging.debug("Received message '" + str(message.payload) + "' on topic '"
+        LOGGER.debug("Received message '" + str(message.payload) + "' on topic '"
                      + message.topic + "' with QoS " + str(message.qos))
         if message.topic in self.subscriptions:
             for mac, subscription_client_data in self.subscriptions[message.topic].items():
@@ -128,7 +130,7 @@ class MqttAsyncHelper:
                 op_response.result_code = response.Result.OK
                 op_response.payload = message.payload
                 response_message.opResponses.extend([op_response])
-                logging.debug(response_message)
+                LOGGER.debug(response_message)
                 self.serial_helper.send_serial_message(response_message.SerializeToString())
 
     def publish(self, request_message: request, send_operation: request.Send):
@@ -149,7 +151,7 @@ class MqttAsyncHelper:
             "operation_type": subscribe_operation.operation_type,
             "subscribed_at": int(time.time() * 1000.0)
         }
-        logging.debug(self.subscriptions)
+        LOGGER.debug(self.subscriptions)
 
     def build_topic(self, client_id: str, queue: str) -> str:
         return "{}/{}/{}".format(self.mqtt_config.gateway_id, client_id, queue)

@@ -5,8 +5,10 @@ import trio
 from trio_serial import SerialStream
 
 SERIAL_PORT = '/dev/ttyACM0'
-# SERIAL_PORT = '/dev/ttyUSB1'
+# SERIAL_PORT = '/dev/ttyUSB0'
 BAUD_RATE = 115200
+
+LOGGER = logging.getLogger("SerialAsyncHelper")
 
 
 class SerialAsyncHelper:
@@ -15,12 +17,12 @@ class SerialAsyncHelper:
         self.read_from_uart_callback = read_from_uart_callback
 
     async def handle_serial_messages(self):
-        logging.info("Starting serial message handler")
+        LOGGER.info("Starting serial message handler")
         async with SerialStream(SERIAL_PORT, baudrate=115200) as ser:
             buffer = b""
             while True:
                 received_data = await ser.receive_some(200)
-                logging.debug(received_data)
+                LOGGER.debug(received_data)
                 if received_data:
                     buffer += received_data
                     while b"|" in buffer:
@@ -28,7 +30,7 @@ class SerialAsyncHelper:
                         self.read_from_uart_callback(message)
 
     async def serial_loop(self):
-        logging.info("Starting serial loop")
+        LOGGER.info("Starting serial loop")
         async with trio.open_nursery() as nursery:
             nursery.start_soon(self.handle_serial_messages)
 

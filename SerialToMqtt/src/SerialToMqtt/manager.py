@@ -8,6 +8,8 @@ from messages_pb2 import request, response
 from mqtt_helper import MqttAsyncHelper, MqttConfig
 from serial_helper import SerialAsyncHelper
 
+LOGGER = logging.getLogger("SerialToMqttManager")
+
 
 class SerialToMqttManager:
     def __init__(self):
@@ -22,21 +24,21 @@ class SerialToMqttManager:
 
     async def run_mqtt_and_serial_threads(self):
         try:
-            logging.info("Starting mqtt and serial threads")
+            LOGGER.info("Starting mqtt and serial threads")
             async with trio.open_nursery() as nursery:
                 nursery.start_soon(self.mqtt_helper.mqtt_loop)
                 nursery.start_soon(self.serial_helper.serial_loop)
         except:
-            logging.error("Error in trio main process")
+            LOGGER.error("Error in trio main process")
             traceback.print_exc()
 
     def read_from_uart_callback(self, payload):
-        logging.debug("++++++++++++++++++++++++++++++++++++++++++++++++++")
-        logging.debug(payload)
+        LOGGER.debug("++++++++++++++++++++++++++++++++++++++++++++++++++")
+        LOGGER.debug(payload)
         request_message = request()
         # request_message.ParseFromString(payload[:-1])
         request_message.ParseFromString(payload)
-        logging.debug(request_message)
+        LOGGER.debug(request_message)
         response_message = response()
         response_message.from_mac = request_message.to_mac
         response_message.to_mac = request_message.from_mac
@@ -65,6 +67,6 @@ class SerialToMqttManager:
                 op_response.result_code = response.Result.OK
                 op_response.payload = str(operation.ping.num)
                 response_message.opResponses.extend([op_response])
-        logging.debug(response_message)
+        LOGGER.debug(response_message)
         self.serial_helper.send_serial_message(response_message.SerializeToString())
-        logging.debug("--------------------------------------------------")
+        LOGGER.debug("--------------------------------------------------")
