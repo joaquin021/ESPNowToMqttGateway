@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  serial2mqtt:
+    container_name: serial2mqtt
+    image: serial2mqtt:latest
+    restart: unless-stopped
+    # cpus: 0.15
+    environment:
+      - TZ=Europe/Madrid
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - GATEWAY_ID=ESPNowToMqttGateway
+      - GATEWAY_MAC=ab01cd02ef03
+      - MQTT_HOST=X.X.X.X
+      - MQTT_PORT=1883
+      - MQTT_USER=mqtt_user
+      - MQTT_PASSWORD=XXXX
+    devices:
+      - /dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_00cb57f99a78ec118002765a19c2d21c-if00-port0:/dev/ttyACM0
